@@ -1,78 +1,57 @@
 import dotenv from "dotenv";
-
 dotenv.config();
 
-const ODOO_URL = process.env.ODOO_URL;
-const DB_NAME = process.env.DATABASE;
-const ODOO_USER = process.env.USERNAME;
-const ODOO_API_KEY = process.env.PASSWORD;
+// 🔧 Función para crear una conexión
+function makeOdooClient({ url, db, user, apiKey }) {
+  async function jsonRpcCall(service, method, args = []) {
+    const payload = {
+      jsonrpc: "2.0",
+      method: "call",
+      params: { service, method, args },
+      id: Math.floor(Math.random() * 1000000000),
+    };
 
-async function jsonRpcCall(service, method, args = []) {
-  const url = `${ODOO_URL}/jsonrpc`;
-  const payload = {
-    jsonrpc: '2.0',
-    method: 'call',
-    params: {
-      service,
-      method,
-      args,
-    },
-    id: Math.floor(Math.random() * 1000000000),
-  };
+    const response = await fetch(`${url}/jsonrpc`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
+    const data = await response.json();
 
-  if (!response.ok) throw new Error(`Network error: ${response.status} ${response.statusText}`);
+    if (data.error)
+      throw new Error(
+        `Odoo Error: ${data.error.message} - ${data.error.data?.debug || ""}`
+      );
 
-  const data = await response.json();
+    return data.result;
+  }
 
-  if (data.error) throw new Error(`Odoo Error: ${data.error.message} - ${data.error.data.debug}`);
+  async function authenticate() {
+    const uid = await jsonRpcCall("common", "login", [db, user, apiKey]);
+    if (!uid) throw new Error("Authentication failed. Check credentials.");
+    return uid;
+  }
 
-  return data.result;
-}
-
-async function getOdooCompanyName() {
-  try {
-    console.log('Authenticating...');
-
-    const uid = await jsonRpcCall('common', 'login', [DB_NAME, ODOO_USER, ODOO_API_KEY]);
-    if (!uid) throw new Error('Authentication failed. Check your credentials.');
-
-    console.log(`Authentication successful. UID: ${uid}`);
-
-    console.log('Fetching company name...');
-    const searchArgs = [
-      DB_NAME,
+  async function readModel(uid, model, fields = ["name"], domain = [[]], limit = 10) {
+    const args = [
+      db,
       uid,
-      ODOO_API_KEY,
-      'res.company',      // Model to query
-      'search_read',      // Method to use
-      [[]],               // Domain (empty for all records)
-      { fields: ['name'], limit: 1 }, // Options: get only the 'name' field, limit to 1 result
+      apiKey,
+      model,
+      "search_read",
+      domain,
+      { fields, limit },
     ];
-
-    const companies = await jsonRpcCall('object', 'execute_kw', searchArgs);
-
-    if (!companies || companies.length === 0) throw new Error('No companies found in the database.');
-
-    // 3. Return the name of the first company
-    return companies[0].name;
-
-  } catch (error) {
-    console.error('Failed to retrieve company name:', error.message);
-    throw error;
+    return jsonRpcCall("object", "execute_kw", args);
   }
+
+  async function createModel(uid, model, values) {
+    const args = [db, uid, apiKey, model, "create", [values]];
+    return jsonRpcCall("object", "execute_kw", args);
+  }
+
+  return { authenticate, readModel, createModel };
 }
 
-(async () => {
-  try {
-    const companyName = await getOdooCompanyName();
-    console.log(`\n✅ Success! Company Name: ${companyName}`);
-  } catch (error) {
-    console.error('\n❌ Script failed.');
-  }
-})();
+export { makeOdooClient };
