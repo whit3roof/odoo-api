@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-// 🔧 Función para crear una conexión
 function makeOdooClient({ url, db, user, apiKey }) {
   async function jsonRpcCall(service, method, args = []) {
     const payload = {
@@ -19,30 +18,46 @@ function makeOdooClient({ url, db, user, apiKey }) {
 
     const data = await response.json();
 
-    if (data.error)
+    if (data.error) {
       throw new Error(
         `Odoo Error: ${data.error.message} - ${data.error.data?.debug || ""}`
       );
+    }
 
     return data.result;
   }
 
   async function authenticate() {
     const uid = await jsonRpcCall("common", "login", [db, user, apiKey]);
-    if (!uid) throw new Error("Authentication failed. Check credentials.");
+    if (!uid) throw new Error("❌ Falló la autenticación.");
     return uid;
   }
 
-  async function readModel(uid, model, fields = ["name"], domain = [[]], limit = 10) {
+  async function readModel(uid, model, fields = ["name"], domain = [], limit = 5) {
+
+    let validDomain = [];
+    
+    if (Array.isArray(domain) && domain.length > 0) {
+
+      if (Array.isArray(domain[0])) {
+        validDomain = domain;
+      } else {
+
+        validDomain = [domain];
+      }
+    }
+    
+ 
     const args = [
-      db,
-      uid,
-      apiKey,
-      model,
-      "search_read",
-      domain,
-      { fields, limit },
+      db, 
+      uid, 
+      apiKey, 
+      model, 
+      "search_read", 
+      validDomain,  
+      { fields, limit }  
     ];
+    
     return jsonRpcCall("object", "execute_kw", args);
   }
 
@@ -51,7 +66,7 @@ function makeOdooClient({ url, db, user, apiKey }) {
     return jsonRpcCall("object", "execute_kw", args);
   }
 
-  return { authenticate, readModel, createModel };
+  return { jsonRpcCall, authenticate, readModel, createModel, db, apiKey };
 }
 
 export { makeOdooClient };
