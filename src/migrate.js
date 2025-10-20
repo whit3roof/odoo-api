@@ -1,24 +1,4 @@
-import dotenv from "dotenv";
-import { makeOdooClient } from "./auth/odooClient.js";
-import { createIfNotExists } from "./utils.js";
-
-dotenv.config();
-
-// Origin
-const origin = makeOdooClient({
-  url: process.env.ODOO_URL_ORIGIN,
-  db: process.env.ODOO_DB_ORIGIN,
-  user: process.env.ODOO_USER_ORIGIN,
-  apiKey: process.env.ODOO_API_ORIGIN,
-});
-
-// Destination
-const dest = makeOdooClient({
-  url: process.env.ODOO_URL_DEST,
-  db: process.env.ODOO_DB_DEST,
-  user: process.env.ODOO_USER_DEST,
-  apiKey: process.env.ODOO_API_DEST,
-});
+import { dest, origin } from "./config/connection.js";
 
 async function migrateContacts() {
   try {
