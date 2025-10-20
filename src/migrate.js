@@ -12,7 +12,7 @@ const origin = makeOdooClient({
   apiKey: process.env.ODOO_API_ORIGIN,
 });
 
-// Destiny
+// Destination
 const dest = makeOdooClient({
   url: process.env.ODOO_URL_DEST,
   db: process.env.ODOO_DB_DEST,
@@ -45,7 +45,7 @@ async function migrateContacts() {
     let errors = 0;
 
 
-    console.log("🔍 Precargando contactos existentes en destino...");
+    console.log("🔍 Preloading contacts in ...");
     const existingContacts = await dest.readModel(
       uidDest,
       "res.partner",
@@ -54,17 +54,15 @@ async function migrateContacts() {
       1000
     );
     
-    console.log(`📊 Contacts already un destiny DB: ${existingContacts.length}`);
-
-    for (const c of contacts) {
-      if (!c.email && !c.phone) {
-        console.log(`⚠️ Omitido: ${c.name} (no email no teléfono)`);
+    for (const contact of contacts) {
+      if (!contact.email && !contact.phone) {
+        console.warn(`⚠️ Omitted: ${contact.name} (no email and phone available)`);
         skipped++;
         continue;
       }
 
-      const uniqueField = c.email ? "email" : "phone";
-      const uniqueValue = c[uniqueField]?.trim().toLowerCase();
+      const uniqueField = contact.email ? "email" : "phone";
+      const uniqueValue = contact[uniqueField]?.trim().toLowerCase();
 
       const alreadyExists = existingContacts.some(existing => {
         const existingValue = existing[uniqueField]?.toString().toLowerCase().trim();
@@ -72,29 +70,29 @@ async function migrateContacts() {
       });
 
       if (alreadyExists) {
-        console.log(`⚠️ Omitido: ${c.name} (already exist ${uniqueField} = "${uniqueValue}")`);
+        console.log(`⚠️ Omitted: ${contact.name} (already exist ${uniqueField} = "${uniqueValue}")`);
         skipped++;
         continue;
       }
 
       
       try {
-        console.log(`🆕 Creating: ${c.name}...`);
+        console.log(`🆕 Creating: ${contact.name}...`);
         const newId = await dest.createModel(uidDest, "res.partner", {
-          name: c.name,
-          email: c.email,
-          phone: c.phone,
-          is_company: c.is_company,
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          is_company: contact.is_company,
         });
         created++;
-        console.log(`✅ Created: ${c.name} (ID: ${newId})`);
+        console.log(`✅ Created: ${contact.name} (ID: ${newId})`);
         
         
         existingContacts.push({
           id: newId,
-          name: c.name,
-          email: c.email,
-          phone: c.phone
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone
         });
         
       } catch (err) {
@@ -103,7 +101,7 @@ async function migrateContacts() {
       }
     }
 
-    console.log(`🎉 Migración completada: ${created} creados, ${skipped} omitidos, ${errors} errores`);
+    console.log(`🎉 Migration done: ${created} created, ${skipped} omitted, ${errors} errors`);
   } catch (err) {
     console.error("❌ Error in migration:", err.message);
   }
