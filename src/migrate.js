@@ -33,7 +33,7 @@ async function migrateContacts() {
     const contacts = await origin.readModel(
       uidOrigin,
       "res.partner",
-      ["name", "email", "phone", "is_company"],
+      ["name", "email", "phone", "is_company", "vat"],
       [], 
       5 // Contacts read limit
     );
@@ -49,19 +49,24 @@ async function migrateContacts() {
     const existingContacts = await dest.readModel(
       uidDest,
       "res.partner",
-      ["id", "name", "email", "phone"],
+      ["id", "name", "email", "phone", "vat"],
       [],
     );
     
     for (const contact of contacts) {
-      if (!contact.email && !contact.phone) {
-        console.warn(`⚠️ Omitted: ${contact.name} (no email and phone available)`);
+      if (!contact.email && !contact.phone && !contact.vat) {
+        console.warn(`⚠️ Omitted: ${contact.name} (no email, phone and vat available)`);
         skipped++;
         continue;
       }
 
-      const uniqueField = contact.email ? "email" : "phone";
-      const uniqueValue = contact[uniqueField]?.trim().toLowerCase();
+      const uniqueField = 
+        contact.email ? "email" :
+        contact.phone ? "phone":
+        "vat";
+
+      const rawValue = contact[uniqueField];
+      const uniqueValue = String(rawValue || "").trim().toLowerCase();
 
       const alreadyExists = existingContacts.some(existing => {
         const existingValue = existing[uniqueField]?.toString().toLowerCase().trim();
@@ -81,6 +86,7 @@ async function migrateContacts() {
           email: contact.email,
           phone: contact.phone,
           is_company: contact.is_company,
+          vat: contact.vat,
         });
         created++;
         console.log(`✅ Created: ${contact.name} (ID: ${newId})`);
@@ -90,7 +96,8 @@ async function migrateContacts() {
           id: newId,
           name: contact.name,
           email: contact.email,
-          phone: contact.phone
+          phone: contact.phone,
+          vat: contact.vat,
         });
         
       } catch (err) {
