@@ -35,7 +35,7 @@ async function migrateContacts() {
       "res.partner",
       ["name", "email", "phone", "is_company"],
       [], 
-      5    
+      5 // Contacts read limit
     );
 
     console.log(`📋 Total: ${contacts.length}`);
@@ -51,7 +51,6 @@ async function migrateContacts() {
       "res.partner",
       ["id", "name", "email", "phone"],
       [],
-      1000
     );
     
     for (const contact of contacts) {
@@ -77,7 +76,6 @@ async function migrateContacts() {
 
       
       try {
-        console.log(`🆕 Creating: ${contact.name}...`);
         const newId = await dest.createModel(uidDest, "res.partner", {
           name: contact.name,
           email: contact.email,
