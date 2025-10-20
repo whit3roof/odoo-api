@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-function makeOdooClient({ url, db, user, apiKey }) {
+export function makeOdooClient({ url, db, user, apiKey }) {
   async function jsonRpcCall(service, method, args = []) {
     const payload = {
       jsonrpc: "2.0",
@@ -68,5 +68,3 @@ function makeOdooClient({ url, db, user, apiKey }) {
 
   return { jsonRpcCall, authenticate, readModel, createModel, db, apiKey };
 }
-
-export { makeOdooClient };
