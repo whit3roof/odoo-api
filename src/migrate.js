@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { makeOdooClient } from "./app.js";
+import { makeOdooClient } from "./auth/odooClient.js";
 import { createIfNotExists } from "./utils.js";
 
 dotenv.config();
