@@ -18,18 +18,14 @@ export function makeOdooClient({ url, db, user, apiKey }) {
 
     const data = await response.json();
 
-    if (data.error) {
-      throw new Error(
-        `Odoo Error: ${data.error.message} - ${data.error.data?.debug || ""}`
-      );
-    }
+    if (data.error) throw new Error(`Odoo Error: ${data.error.message} - ${data.error.data?.debug || "Unknown Error"}`);
 
     return data.result;
   }
 
   async function authenticate() {
     const uid = await jsonRpcCall("common", "login", [db, user, apiKey]);
-    if (!uid) throw new Error("❌ Falló la autenticación.");
+    if (!uid) throw new Error("❌ Auth failed.");
     return uid;
   }
 
