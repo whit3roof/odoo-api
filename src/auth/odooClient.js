@@ -29,7 +29,7 @@ export function makeOdooClient({ url, db, user, apiKey }) {
     return uid;
   }
 
-  async function readModel(uid, model, fields = ["name"], domain = [], limit = 5) {
+  async function readModel(uid, model, fields = ["name"], domain = [], limit = 3) {
 
     let validDomain = [];
     
