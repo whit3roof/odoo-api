@@ -92,7 +92,7 @@ export const migrateSales = async () => {
                     payment_term_id: paymentTermId,
                 });
 
-                console.log(`✅ Sale created in destination: ${newSale}`);
+                console.log(`! Sale created in destination: ${newSale}`);
 
                 /*
                 * * Read the order lines from the sale
@@ -125,7 +125,7 @@ export const migrateSales = async () => {
                     try {
                         const productName = line.product_template_id?.[1];
                         if (!productName) {
-                            console.warn(`⚠️ Missing product_template_id in line`);
+                            console.warn(`!!! Missing product_template_id in line`);
                             continue;
                         }
 
