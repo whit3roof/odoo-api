@@ -1,5 +1,15 @@
 import { origin, dest } from "../../config/connection.js";
 
+/**
+ * Migrates a sale and their order lines from an origin database 
+ * into the database assigned as destiny, it also creates a
+ * product if it's nof found, it will not create a contact
+ * if not found in order to avoid duplications for this module
+ * 
+ * NOTE: make sure to edit the value in line 33 as it works as
+ * the migration sales limit
+ */
+
 export const migrateSales = async () => {
     try {
         const originDb = await origin.authenticate();
