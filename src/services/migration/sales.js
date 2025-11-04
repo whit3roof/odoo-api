@@ -43,6 +43,18 @@ export const migrateSales = async () => {
             try {
                 console.log(`\n🔹 Migrating sale: ${sale.name}`);
 
+                const exist = await dest.readModel(
+                    destinationDb,
+                    "sale.order",
+                    ["id", "name"],
+                    [[["name", "=", sale.name]]]
+                );
+                if (exist.length) {
+                    console.warn(`Sale ${sale.name} already exist`);
+                    failed++;
+                    continue;
+                }
+
                 // Find matching partner
                 const contact = await dest.readModel(
                     destinationDb,
