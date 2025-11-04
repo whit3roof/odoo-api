@@ -15,9 +15,6 @@ export const migrateSales = async () => {
         const originDb = await origin.authenticate();
         const destinationDb = await dest.authenticate();
 
-        /*
-        * * Start reading for sales
-        */
         const sales = await origin.readModel(
             originDb,
             "sale.order",
@@ -36,9 +33,6 @@ export const migrateSales = async () => {
         let created = 0;
         let failed = 0;
 
-        /*
-        * * Iterate over each sale and migrate
-        */
         for (const sale of sales) {
             try {
                 console.log(`\n🔹 Migrating sale: ${sale.name}`);
