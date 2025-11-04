@@ -62,5 +62,10 @@ export function makeOdooClient({ url, db, user, apiKey }) {
     return jsonRpcCall("object", "execute_kw", args);
   }
 
-  return { jsonRpcCall, authenticate, readModel, createModel, db, apiKey };
+  async function callMethod(uid, model, method, args = []) {
+    const payload = [db, uid, apiKey, model, method, args];
+    return jsonRpcCall("object", "execute_kw", payload);
+  }
+
+  return { jsonRpcCall, authenticate, readModel, createModel, callMethod, db, apiKey };
 }
