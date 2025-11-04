@@ -31,6 +31,7 @@ export const migrateSales = async () => {
         );
 
         let created = 0;
+        let skipped = 0;
         let failed = 0;
 
         for (const sale of sales) {
@@ -45,7 +46,7 @@ export const migrateSales = async () => {
                 );
                 if (exist.length) {
                     console.warn(`Sale ${sale.name} already exist`);
-                    failed++;
+                    skipped++;
                     continue;
                 }
 
@@ -177,7 +178,7 @@ export const migrateSales = async () => {
             }
         }
 
-        console.log(`\n__FINISHED__: Migration completed. Sales migrated: ${created}, failed: ${failed}`);
+        console.log(`\n__FINISHED__: Migration completed. Sales migrated: ${created}, skipped: ${skipped}, failed: ${failed}`);
     } catch (error) {
         console.error("__ERROR__: Sales migration failed: ", error);
     }
